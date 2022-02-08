@@ -8,14 +8,16 @@
         <version>2.6.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>ru.bootjava</groupId>
-    <artifactId>restaurant-voting</artifactId>
+    <groupId>ru.javaops</groupId>
+    <artifactId>bootjava</artifactId>
     <version>1.0</version>
-    <name>restaurant-voting</name>
+    <name>BootJava</name>
     <description>Spring Boot 2.x HATEOAS application (BootJava)</description>
     <properties>
         <java.version>17</java.version>
-        <springdoc.version>1.5.6</springdoc.version>
+        <springdoc.version>1.6.2</springdoc.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
     <dependencies>
         <dependency>
@@ -32,11 +34,11 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-rest</artifactId>
+            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-hibernate5</artifactId>
         </dependency>
 
         <!--
@@ -52,6 +54,8 @@
             <artifactId>springdoc-openapi-ui</artifactId>
             <version>${springdoc.version}</version>
         </dependency>
+
+        <!--        jackson-->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-data-rest</artifactId>
@@ -71,6 +75,11 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.14.3</version>
         </dependency>
 
         <dependency>
@@ -93,6 +102,11 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -107,6 +121,14 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!--https://junit.org/junit5/docs/current/user-guide/#running-tests-build-maven -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Dfile.encoding=UTF-8</argLine>
                 </configuration>
             </plugin>
         </plugins>
