@@ -1,7 +1,10 @@
 package ru.javaops.bootjava.web;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.data.rest.webmvc.RepositoryLinksResource;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
@@ -21,7 +24,7 @@ import ru.javaops.bootjava.util.ValidationUtil;
 
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.Set;
+import java.util.EnumSet;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
@@ -35,10 +38,13 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
  * RequestMapping("/${spring.data.rest.basePath}/account") give "Not enough variable values"
  */
 @RestController
-@RequestMapping("/api/account")
+@RequestMapping(AccountController.URL)
 @AllArgsConstructor
 @Slf4j
+@Tag(name = "Account Controller")
 public class AccountController implements RepresentationModelProcessor<RepositoryLinksResource> {
+    static final String URL = "/api/account";
+
     @SuppressWarnings("unchecked")
     private static final RepresentationModelAssemblerSupport<User, EntityModel<User>> ASSEMBLER =
             new RepresentationModelAssemblerSupport<>(AccountController.class, (Class<EntityModel<User>>) (Class<?>) EntityModel.class) {
@@ -58,17 +64,18 @@ public class AccountController implements RepresentationModelProcessor<Repositor
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @CacheEvict(value = "users", key = "#authUser.username")
     public void delete(@AuthenticationPrincipal AuthUser authUser) {
         log.info("delete {}", authUser);
         userRepository.deleteById(authUser.id());
     }
 
-    @PostMapping(value = "/register", consumes = MediaTypes.HAL_JSON_VALUE)
+    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(value = HttpStatus.CREATED)
     public ResponseEntity<EntityModel<User>> register(@Valid @RequestBody User user) {
         log.info("register {}", user);
         ValidationUtil.checkNew(user);
-        user.setRoles(Set.of(Role.USER));
+        user.setRoles(EnumSet.of(Role.USER));
         user = userRepository.save(user);
         URI uriOfNewResource = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/account")
@@ -78,7 +85,8 @@ public class AccountController implements RepresentationModelProcessor<Repositor
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void update(@Valid @RequestBody User user, @AuthenticationPrincipal AuthUser authUser) {
+    @CachePut(value = "users", key = "#authUser.username")
+    public User update(@Valid @RequestBody User user, @AuthenticationPrincipal AuthUser authUser) {
         log.info("update {} to {}", authUser, user);
         User oldUser = authUser.getUser();
         ValidationUtil.assureIdConsistent(user, oldUser.id());
@@ -86,7 +94,7 @@ public class AccountController implements RepresentationModelProcessor<Repositor
         if (user.getPassword() == null) {
             user.setPassword(oldUser.getPassword());
         }
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
 /*
